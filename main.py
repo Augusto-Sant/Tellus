@@ -134,15 +134,16 @@ def random_battle(fighter):
         print("{} Attack: {}".format(fighter.name,str(fighter_atk)))
         #player rolls dex
         miss_player = (fighter.dexterity+rolld6())
-        if monster_atk > (miss_player/2) and gen_monster.dexterity > fighter.dexterity:
+        miss_monster = (gen_monster.dexterity+rolld6())
+        if fighter.dexterity < (miss_monster/2):
             print("and misses..")
         else:
             if fighter_atk > 15:
                 organ_name = "head"
             else:
                 organ_name = random.choice(organs)
+            print(text_with_color("Red","and {} hits {}".format(fighter.name,organ_name)))
             gen_monster.hp -= fighter_atk
-        print(text_with_color("Red","and {} hits {}".format(fighter.name,organ_name)))
         #
         print((gen_monster.name+" Attack: "+str(monster_atk)))
         if gen_monster.dexterity < (miss_player/2):
@@ -179,19 +180,19 @@ def main():
         new_hp = 150
         new_int = 6
         new_str = 5
-        new_dex = 6
+        new_dex = 7
     elif player_race == "2":
         player_race = "Elf"
         new_hp = 100
         new_int = 7
         new_str = 3
-        new_dex = 12
+        new_dex = 14
     elif player_race == "3":
         player_race = "Dwarf"
         new_hp = 200
         new_int = 7
         new_str = 8
-        new_dex = 3
+        new_dex = 5
     player = Player(player_name,player_age,player_race)
     player.hp += new_hp
     player.strength += new_str
