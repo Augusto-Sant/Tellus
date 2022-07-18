@@ -50,6 +50,9 @@ class World():#NEED BETTER WORLD GENERATION
         self.used_races = used_races
         self.in_world_races = in_world_races
     
+    def __str__(self):
+        return f"Name: {self.name}, Races: {self.in_world_races}"
+    
     def generate_world(self,number_rows,number_columns):
         """Creates a procedural world"""
         #setup of coordinates and start positions
@@ -110,6 +113,9 @@ class Population():#SETUP FOR DIFFERENT POPULATIONS
     def __init__(self,quantity,race):
         self.quantity = quantity
         self.race = race
+    
+    def __str__(self):
+        return self.race
 
 #FUNCTIONS--
 
@@ -247,14 +253,20 @@ def world(main_window,color,max_y,max_x,colors_list):
             cursor_column -= 1
             if cursor_column < 0:
                 cursor_column += 1
+        elif cursor_key == "c":
+            #CHOOSE START REGION--
+            if saved_symbol == "*":
+                main_window.clear()
+                provinces.update({(cursor_row,cursor_column):saved_symbol})
+                world_made = True
+                main_window.addstr((max_y//2)-15,(max_x//2)-15,f"World {player_world.name} created.",colors_list[0])
+                curses.napms(200)
+                main_window.clear()
+                #RETURNS OF WORLD--
+                return world_made,player_world
         else:
             provinces.update({(cursor_row,cursor_column):saved_symbol})
         main_window.refresh()
-        # if ans == "yes":
-        #     provinces.update({(cursor_row,cursor_column):saved_symbol})
-        #     print(provinces[(cursor_row,cursor_column)]," this region is called...")
-        # else:
-        #     provinces.update({(cursor_row,cursor_column):saved_symbol})
 
 def game_input(main_window,bg_color,max_y,max_x,height=15,width=60,):
     """A small procedure to create input box for commands."""
@@ -296,25 +308,29 @@ def main(src):
     curses.init_pair(3,curses.COLOR_BLUE,curses.COLOR_BLACK)
     curses.init_pair(4,curses.COLOR_BLACK,curses.COLOR_BLUE)
     curses.init_pair(5,curses.COLOR_GREEN,curses.COLOR_BLACK)
+    curses.init_pair(6,curses.COLOR_BLACK,curses.COLOR_RED)
     BLACK_WHITE = curses.color_pair(1)
     RED_BLACK = curses.color_pair(2)
+    BLACK_RED = curses.color_pair(6)
     BLUE_BLACK = curses.color_pair(3)
     BLACK_BLUE = curses.color_pair(4)
     GREEN_BLACK = curses.color_pair(5)
     
     src.border()
 
-    search_button = Button(src,"search",5,15,8,3,BLACK_WHITE)
+    search_button = Button(src,"search",5,15,8,3,BLACK_BLUE)
     search_button.create()
-    add_button = Button(src,"add",5,15,13,3,BLACK_WHITE)
+    add_button = Button(src,"add",5,15,13,3,BLACK_BLUE)
     add_button.create()
-    remove_button = Button(src,"remove",5,15,18,3,BLACK_WHITE)
+    remove_button = Button(src,"remove",5,15,18,3,BLACK_RED)
     remove_button.create()
     src.refresh()
+    #world init
+    world_made = False
     while True:
         src.border()
         src.addstr(max_y-1,1,"(q) to quit",RED_BLACK)
-
+        src.addstr(0,1,"(c) to choose",BLUE_BLACK)
         key = src.getkey()
 
         #KEY INPUT
@@ -330,10 +346,12 @@ def main(src):
         elif key == "c":
             if key_position == 1:
                 #PLAY
-                print("Ok")
+                if world_made == True:
+                    print("playing..")
+                    print(player_world)
             elif key_position == 2:
                 #WORLD
-                world(src,BLUE_BLACK,max_y,max_x,[GREEN_BLACK,BLUE_BLACK,BLACK_BLUE])
+                world_made,player_world = world(src,BLUE_BLACK,max_y,max_x,[GREEN_BLACK,BLUE_BLACK,BLACK_BLUE])
             elif key_position == 3:
                 #QUIT
                 curses.endwin()
