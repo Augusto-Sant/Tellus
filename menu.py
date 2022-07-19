@@ -4,7 +4,7 @@ import world
 import play
 
 def main_menu(src):
-    #INIT
+    """Main menu"""
     max_y,max_x = src.getmaxyx()
     key_position = 2
     #hide cursor
@@ -82,4 +82,5 @@ def main_menu(src):
         src.refresh()
 
 def run():
+    """Wraps and runs Main Menu"""
     curses.wrapper(main_menu)

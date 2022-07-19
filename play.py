@@ -1,11 +1,14 @@
 import curses
 import random
+import sys
 
 import text_tools
+import world
 
 class Entity():
     """Entity for play"""
-    def __init__(self,symbol,x,y):
+    def __init__(self,name,symbol,x,y):
+        self.name = name
         self.symbol = symbol
         self.x = x
         self.y = y
@@ -56,8 +59,12 @@ def terrain(main_window,max_y,max_x,entities):
             if len(entities) > 0:
                 for entity in entities:
                     if entity.y == row and entity.x == column:
-                        main_window.addstr(y_axis,x_axis,entity.symbol,colors[5])
-                        main_window.refresh()
+                        #aethetic detail of cursor, invisibility
+                        if entity.name == "cursor" and entity.symbol == " ":
+                            main_window.addstr(y_axis,x_axis,"¨",GREY)
+                        else:
+                            main_window.addstr(y_axis,x_axis,entity.symbol,colors[5])
+                            main_window.refresh()
                         break
                     else:
                         #ground
@@ -81,39 +88,59 @@ def run(main_window):
     main_window.addstr(0,25,"(.) to pass time",BLUE_BLACK)
     main_window.getkey()
     curses.curs_set(0)
-    entity1 = Entity("D",1,1)
-    entity2 = Entity("@",5,10)
-    entity3 = Entity("I",6,10)
-    cursor = Entity("X",0,0)
+    #creation of pops
+    entity1 = Entity("1","e",1,1)
+    entity2 = Entity("2","d",5,10)
+    entity3 = Entity("3","u",6,10)
+    #cursor is an entity, but first so its always on top
+    cursor = Entity("cursor","X",0,0)
     entities = [cursor,entity1,entity2,entity3]
+    main_window.nodelay(True)
     while True:
-        curses.napms(16)
+        cursor.symbol = " "
+        curses.napms(200)
         terrain(main_window,max_y,max_x,entities)
-        cursor_key = main_window.getkey()
-        if cursor_key == "KEY_UP":
-            cursor.y -= 1
-            if cursor.y < 0:
-                cursor.y += 1
-        elif cursor_key == "KEY_DOWN":
-            cursor.y += 1
-            if cursor.y > 38-1:
-                cursor.y -= 1
-        elif cursor_key == "KEY_RIGHT":
-            cursor.x += 1
-            if cursor.x > 154-1:
-                cursor.x -= 1
-        elif cursor_key == "KEY_LEFT":
-            cursor.x -= 1
-            if cursor.x < 0:
-                cursor.x += 1
-        elif cursor_key == "c":
-            for entity in entities:
-                entity.move(main_window,cursor.x,cursor.y)
-        elif cursor_key == "q":
+        #activate cursor
+        key = main_window.getch()
+        if key == ord("p"):
+            cursor.symbol = "X"
+            main_window.nodelay(False)
+            cursor_key = ""
+            while cursor_key != "p":
+                cursor_key = main_window.getkey()
+                if cursor_key == ("KEY_UP"):
+                    cursor.y -= 1
+                    if cursor.y < 0:
+                        cursor.y += 1
+                elif cursor_key == "KEY_DOWN":
+                    cursor.y += 1
+                    if cursor.y > 38-1:
+                        cursor.y -= 1
+                elif cursor_key == "KEY_RIGHT":
+                    cursor.x += 1
+                    if cursor.x > 154-1:
+                        cursor.x -= 1
+                elif cursor_key == "KEY_LEFT":
+                    cursor.x -= 1
+                    if cursor.x < 0:
+                        cursor.x += 1
+                elif cursor_key == "c":
+                    for entity in entities:
+                        entity.move(main_window,cursor.x,cursor.y)
+                elif cursor_key == "q":
+                    curses.endwin()
+                    sys.exit()
+                terrain(main_window,max_y,max_x,entities)
+                main_window.refresh()
+            main_window.refresh()  
+            main_window.nodelay(True)
+        elif key == ord("q"):
+            main_window.nodelay(False)
             curses.endwin()
             main_window.clear()
             break
 
+
         for entity in entities:
-            if entity.symbol != "X":
+            if entity.name != "cursor":
                 entity.idle()
