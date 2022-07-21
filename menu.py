@@ -41,10 +41,13 @@ def main_menu(src):
             if key_position == 1:
                 #PLAY
                 if world_made == True:
-                    print("playing..")
-                    print(player_world,region_start)
                     src.clear()
-                    play.run(src)
+                    src.addstr((max_y//2)-10,(max_x//2)-15,
+                    f"Creating starting region: {region_start} in {player_world.name}",BLACK_BLUE)
+                    src.refresh()
+                    curses.napms(800)
+                    src.clear()
+                    play.run(src,player_world,region_start)
             elif key_position == 2:
                 #WORLD
                 world_made,player_world,region_start = world.world(src,BLUE_BLACK,max_y,max_x,[GREEN_BLACK,BLUE_BLACK,
