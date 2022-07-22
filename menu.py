@@ -42,16 +42,49 @@ def main_menu(src):
                 #PLAY
                 if world_made == True:
                     src.clear()
-                    src.addstr((max_y//2)-10,(max_x//2)-15,
+                    src.addstr((max_y//2)-20,(max_x//2)-15,
                     f"Creating starting region: {region_start} in {player_world.name}",BLACK_BLUE)
+                    src.addstr((max_y//2)-7,(max_x//2)-15,"Settlement Name (CTRL+G) to save:",BLUE_BLACK)
+                    src.refresh()
+                    settlement_name = (text_tools.game_input(src,GREEN_BLACK,max_y,max_x,5,20)).strip()
+                    src.refresh()
+                    src.clear()
+                    #RACE CHOICE
+                    final_race_position = ""
+                    race_key_position = 1
+                    src.addstr((max_y//2)-7,(max_x//2)-15,"CHOOSE RACE (UP-DOWN) (c) to choose:",BLUE_BLACK)
+                    src.refresh()
+                    while final_race_position == "":
+                        race_key = src.getkey()
+                        if race_key == "KEY_UP":
+                            if race_key_position > 1 and race_key_position <= len(player_world.used_races):
+                                race_key_position -= 1
+                        elif race_key == "KEY_DOWN":
+                            if race_key_position >= 1 and race_key_position < len(player_world.used_races):
+                                race_key_position += 1
+                        elif race_key == "c":
+                            final_race_position = race_key_position
+                        
+                        for i,race in enumerate(player_world.used_races,start=1):
+                            
+                            if race_key_position == i:
+                                src.clear()
+                                src.addstr((max_y//2)-7,(max_x//2)-15,"CHOOSE RACE (UP-DOWN) (c) to choose:",BLUE_BLACK)
+                                src.addstr((max_y//2)-5,(max_x//2)-15,f"{race.capitalize()}",BLACK_BLUE)
+                            src.refresh()
+                        
+                            if final_race_position == i:
+                                chosen_race = race
+                    
+                    src.clear()
+                    #
                     src.refresh()
                     curses.napms(800)
                     src.clear()
-                    play.run(src,player_world,region_start)
+                    play.run(src,player_world,region_start,settlement_name,chosen_race)
             elif key_position == 2:
                 #WORLD
-                world_made,player_world,region_start = world.world(src,BLUE_BLACK,max_y,max_x,[GREEN_BLACK,BLUE_BLACK,
-                BLACK_BLUE])
+                world_made,player_world,region_start = world.world(src,max_y,max_x)
             elif key_position == 3:
                 #QUIT
                 curses.endwin()

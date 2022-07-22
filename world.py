@@ -79,9 +79,10 @@ class Population():#SETUP FOR DIFFERENT POPULATIONS
         return self.race
 #FUNCTIONS--
 
-def world(main_window,color,max_y,max_x,colors_list):
+def world(main_window,max_y,max_x):
     """Procedure that executes world creation and input."""
     accept = ""
+    BLACK_WHITE,RED_BLACK,BLACK_RED,BLUE_BLACK,BLACK_BLUE,GREEN_BLACK = text_tools.curses_colors()
     while accept != "yes":
         #DATA TO BE USED
         list_racial_names = ["human","orc","elf","goblin","dwarf","gnome","giants","hobbit"]
@@ -91,60 +92,60 @@ def world(main_window,color,max_y,max_x,colors_list):
         used_races = []
         in_world_races = []
         main_window.clear()
-        main_window.addstr((max_y//2)-10,(max_x//2)-15,"World Generator",color)
+        main_window.addstr((max_y//2)-7,(max_x//2)-15,"World Generator",BLUE_BLACK)
         main_window.refresh()
         curses.napms(1000)
         main_window.clear()
         #WORLD WIDTH
-        main_window.addstr((max_y//2)-10,(max_x//2)-15,"Width (CTRL+G) to save",color)
+        main_window.addstr((max_y//2)-7,(max_x//2)-15,"Width (CTRL+G) to save",BLUE_BLACK)
         main_window.refresh()
-        world_size_row = text_tools.game_input(main_window,color,max_y,max_x,5,10).strip()
+        world_size_row = text_tools.game_input(main_window,GREEN_BLACK,max_y,max_x,5,10).strip()
         world_size_row = int(world_size_row)
         main_window.clear()
         #WORLD HEIGHT
-        main_window.addstr((max_y//2)-10,(max_x//2)-15,"Height (CTRL+G) to save",color)
+        main_window.addstr((max_y//2)-7,(max_x//2)-15,"Height (CTRL+G) to save",BLUE_BLACK)
         main_window.refresh()
-        world_size_column = text_tools.game_input(main_window,color,max_y,max_x,5,10).strip()
+        world_size_column = text_tools.game_input(main_window,GREEN_BLACK,max_y,max_x,5,10).strip()
         world_size_column = int(world_size_column)
         main_window.clear()
         #NUM RACES WORLD
-        main_window.addstr((max_y//2)-10,(max_x//2)-15,"Races in World Number (CTRL+G) to save",color)
+        main_window.addstr((max_y//2)-7,(max_x//2)-15,"Races in World Number (CTRL+G) to save",BLUE_BLACK)
         main_window.refresh()
-        num_world_races = text_tools.game_input(main_window,color,max_y,max_x,5,10).strip()
+        num_world_races = text_tools.game_input(main_window,GREEN_BLACK,max_y,max_x,5,10).strip()
         num_world_races = int(num_world_races)
         main_window.clear()
         #WORLD NAME
-        main_window.addstr((max_y//2)-10,(max_x//2)-15,"World name (CTRL+G) to save",color)
+        main_window.addstr((max_y//2)-7,(max_x//2)-15,"World name (CTRL+G) to save",BLUE_BLACK)
         main_window.refresh()
-        world_name = text_tools.game_input(main_window,color,max_y,max_x,5,10).strip()
+        world_name = text_tools.game_input(main_window,GREEN_BLACK,max_y,max_x,5,10).strip()
         main_window.clear()
         #TERRAIN/POP--
         player_world = World(world_name,provinces,list_racial_names,used_races,in_world_races)
         player_world.generate_world(world_size_row,world_size_column)
         player_world.generate_populations(num_world_races)
-        player_world.print_world(world_size_row,world_size_column,main_window,max_y,max_x,colors_list)
+        player_world.print_world(world_size_row,world_size_column,main_window,max_y,max_x,[GREEN_BLACK,BLUE_BLACK])
         main_window.refresh()
         main_window.getkey()
         main_window.clear()
         #SHOW RACES--
-        main_window.addstr((max_y//2)-15,(max_x//2)-15,"Races in World:",color)
+        main_window.addstr((max_y//2)-15,(max_x//2)-15,"Races in World:",BLUE_BLACK)
         y_race = (max_y//2)-10
         for race in in_world_races:
             cap_race = race.race.capitalize()
-            main_window.addstr(y_race,(max_x//2)-15,f"{cap_race} Population: {race.quantity}",color)
+            main_window.addstr(y_race,(max_x//2)-15,f"{cap_race} Population: {race.quantity}",BLUE_BLACK)
             y_race += 1
         main_window.refresh()
         main_window.getkey()
         #ACCEPT--
-        main_window.addstr((max_y//2)-5,(max_x//2)-15,"Accept World?",color)
+        main_window.addstr((max_y//2)-5,(max_x//2)-15,"Accept World?",BLUE_BLACK)
         #yes
-        yes_button = text_tools.Button(main_window,"yesb",3,10,(max_y//2),(max_x//2)-15,colors_list[2])
+        yes_button = text_tools.Button(main_window,"yesb",3,10,(max_y//2),(max_x//2)-15,BLACK_BLUE)
         yes_button.create()
         yes_button.string_center("YES")
         yes_button.border(True)
         yes_button.update()
         #no
-        no_button = text_tools.Button(main_window,"nob",3,10,(max_y//2),(max_x//2)-5,colors_list[2])
+        no_button = text_tools.Button(main_window,"nob",3,10,(max_y//2),(max_x//2)-5,BLACK_BLUE)
         no_button.create()
         no_button.string_center("NO")
         no_button.border(True)
@@ -178,8 +179,8 @@ def world(main_window,color,max_y,max_x,colors_list):
             main_window.refresh()
         main_window.clear()
     #WORLD
-    main_window.addstr((max_y//2)-15,(max_x//2)-15,f"{player_world.name}",colors_list[0])
-    player_world.print_world(world_size_row,world_size_column,main_window,max_y,max_x,colors_list)
+    main_window.addstr((max_y//2)-15,(max_x//2)-15,f"{player_world.name}",GREEN_BLACK)
+    player_world.print_world(world_size_row,world_size_column,main_window,max_y,max_x,[GREEN_BLACK,BLUE_BLACK])
     main_window.getkey()
     main_window.clear()
     #MAP SELECT WITH CURSOR---
@@ -187,10 +188,10 @@ def world(main_window,color,max_y,max_x,colors_list):
     cursor_column = 0
     while True:
         main_window.clear()
-        main_window.addstr((max_y//2)-15,(max_x//2)-15,f"{player_world.name} ({cursor_row},{cursor_column})",colors_list[0])
+        main_window.addstr((max_y//2)-15,(max_x//2)-15,f"{player_world.name} ({cursor_row},{cursor_column})",GREEN_BLACK)
         saved_symbol = provinces[(cursor_row,cursor_column)]
         provinces.update({(cursor_row,cursor_column):"X"})
-        player_world.print_world(world_size_row,world_size_column,main_window,max_y,max_x,colors_list)
+        player_world.print_world(world_size_row,world_size_column,main_window,max_y,max_x,[GREEN_BLACK,BLUE_BLACK])
         main_window.refresh()
         cursor_key = main_window.getkey()
         if cursor_key == "KEY_UP":
@@ -219,12 +220,14 @@ def world(main_window,color,max_y,max_x,colors_list):
                 main_window.clear()
                 provinces.update({(cursor_row,cursor_column):saved_symbol})
                 world_made = True
-                main_window.addstr((max_y//2)-15,(max_x//2)-15,f"World {player_world.name} created.",colors_list[0])
+                main_window.addstr((max_y//2)-15,(max_x//2)-15,f"World {player_world.name} created.",GREEN_BLACK)
                 curses.napms(200)
                 main_window.clear()
                 #RETURNS OF WORLD--
                 region_start = (cursor_row,cursor_column)
                 return world_made,player_world,region_start
+            else:
+                provinces.update({(cursor_row,cursor_column):saved_symbol})
         else:
             provinces.update({(cursor_row,cursor_column):saved_symbol})
         main_window.refresh()

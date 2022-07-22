@@ -87,9 +87,6 @@ class Entity():
             elif smaller == (self.y-1,self.x+1):
                 self.x += 1
                 self.y -= 1
-            
-
-
     
     def idle(self,terrain):
         """Idle random walk for entity"""
@@ -193,34 +190,53 @@ class Surface():
         #                 if random.randint(0,50) > 48:
         #                     self.terrain.update({(row,column):"O"})
 
-def run(main_window,player_world,region_start):
+class Settlement():
+    def __init__(self,name,start_region,chosen_race):
+        self.name = name
+        self.start_region = start_region
+        #pops
+        self.race_symbol = chosen_race[0]
+        #resources--
+        self.food = 0
+        self.wood = 0
+    
+    def population(self,quantity):
+        entities = []
+        #cursor is an entity, but first so its always on top
+        cursor = Entity("cursor","X",0,0)
+        entities.append(cursor)
+        for i in range(quantity):
+            entities.append(Entity(str(i),self.race_symbol,1,1))
+        return entities,cursor
+
+def run(main_window,player_world,region_start,settlement_name,chosen_race):
     """Plays the main game inside a previously created world."""
     BLACK_WHITE,RED_BLACK,BLACK_RED,BLUE_BLACK,BLACK_BLUE,GREEN_BLACK = text_tools.curses_colors()
     max_y,max_x = main_window.getmaxyx()
     curses.curs_set(0)
-    #creation of pops
-    entity1 = Entity("1","e",1,1)
-    entity2 = Entity("2","d",5,10)
-    entity3 = Entity("3","u",6,10)
-    #cursor is an entity, but first so its always on top
-    cursor = Entity("cursor","X",0,0)
+    settlement = Settlement(settlement_name,region_start,chosen_race)
+    entities,cursor = settlement.population(3)
     #initialize surface
     surface = Surface()
     surface.make_terrain()
-    #entities
-    entities = [cursor,entity1,entity2,entity3]
     main_window.nodelay(True)
+    #commands
     call_position = []
+    build_position = []
+    #
     while True:
         #TEXTS
         main_window.border()
         main_window.addstr(max_y-1,1,"(q) to quit",RED_BLACK)
-        main_window.addstr(0,1,"(c) to call",BLUE_BLACK)
+        main_window.addstr(0,1,"(c) to call in pause",BLUE_BLACK)
         main_window.addstr(0,25,"(p) to pause",BLUE_BLACK)
-        main_window.addstr(0,45,f"region: {region_start} in {player_world.name}",BLUE_BLACK)
+        main_window.addstr(0,45,f"{settlement_name}",BLUE_BLACK)
+        main_window.addstr(0,55,f"region:{region_start}",BLUE_BLACK)
+        main_window.addstr(0,75,f"Food:{settlement.food}",RED_BLACK)
+        main_window.addstr(0,85,f"Wood:{settlement.wood}",RED_BLACK)
         #
         cursor.symbol = " "
-        curses.napms(200)
+        curses.napms(100)
         surface.print_terrain(main_window,entities)
         #activate cursor
         key = main_window.getch()
@@ -250,6 +266,12 @@ def run(main_window,player_world,region_start):
                 elif cursor_key == "c":
                     call_position.append(cursor.x)
                     call_position.append(cursor.y)
+                    #count if majority of entities arrived
+                    in_position_count = 0
+                elif cursor_key == "b":
+                    build_position.append(cursor.x)
+                    build_position.append(cursor.y)
+                    in_position_count = 0
                 elif cursor_key == "q":
                     curses.endwin()
                     sys.exit()
@@ -262,7 +284,8 @@ def run(main_window,player_world,region_start):
             main_window.addstr(max_y-1,1,"(q) to quit",RED_BLACK)
             main_window.addstr(0,1,"(c) to call in pause",BLUE_BLACK)
             main_window.addstr(0,25,"(p) to pause",BLUE_BLACK)
-            main_window.addstr(0,45,f"region: {region_start} in {player_world.name}",BLUE_BLACK)
+            main_window.addstr(0,45,f"{settlement_name}",BLUE_BLACK)
+            main_window.addstr(0,55,f"region: {region_start}",BLUE_BLACK)
             main_window.refresh()
             #
             main_window.nodelay(True)
@@ -271,13 +294,46 @@ def run(main_window,player_world,region_start):
             curses.endwin()
             main_window.clear()
             break
-
-        print(call_position)
+        
         for entity in entities:
             if len(call_position) > 0 and entity.name != "cursor":
+                #MOVE TO CALL
                 entity.move(call_position[0],call_position[1],surface.terrain)
                 if entity.x == call_position[0] and entity.y == call_position[1]:
+                    in_position_count += 1
+                
+                if in_position_count >= len(entities)-1:
                     call_position.clear()
+            elif len(build_position) > 0 and entity.name != "cursor":
+                if surface.terrain[(build_position[1],build_position[0])] == "O":
+                    #CUT TREE
+                    cut_x = 0
+                    cut_y = 0
+                    if  build_position[0]-1 > 0:
+                        if surface.terrain[(build_position[1],build_position[0]-1)] != "O":
+                            cut_x = -1
+                    elif build_position[0]+1 <= 38-1:
+                        if surface.terrain[(build_position[1],build_position[0]+1)] != "O":
+                            cut_x = 1
+                    elif build_position[1]-1 > 0:
+                        if surface.terrain[(build_position[1]-1,build_position[0])] != "O":
+                            cut_y = -1
+                    elif build_position[1]-1 <= 154-1:
+                        if surface.terrain[(build_position[1]+1,build_position[0])] != "O":
+                            cut_y = 1
+
+                    entity.move(build_position[0]+(cut_x),build_position[1]+(cut_y),surface.terrain)
+                    
+                    if entity.x == build_position[0]+(cut_x) and entity.y == build_position[1]+(cut_y):
+                        in_position_count += 1
+                    
+                    if in_position_count >= len(entities):
+                        #(y,x)
+                        surface.terrain.update({(build_position[1],build_position[0]):"¨"})
+                        settlement.wood += 10
+                        build_position.clear()
+                else:
+                    build_position.clear()
             else:
                 if entity.name != "cursor":
                     entity.idle(surface.terrain)
