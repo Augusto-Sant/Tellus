@@ -258,6 +258,7 @@ def run(main_window,player_world,region_start,settlement_name,chosen_race):
                 main_window.addstr(0,27,"    PAUSED    ",BLACK_BLUE)
                 commands_show = curses.newwin(5,45,0,(max_x//2)+20)
                 commands_show.addstr(2,2,"(c) to call   (b) to cut tree",GREEN_BLACK)
+                commands_show.addstr(3,2,"(e) to build",GREEN_BLACK)
                 commands_show.border()
                 commands_show.refresh()
                 cursor_key = main_window.getkey()
@@ -289,10 +290,11 @@ def run(main_window,player_world,region_start,settlement_name,chosen_race):
                     cut_tree_position_count = 0
                     cut_tree_entity = entities[random.randint(1,settlement.population)]
                 elif cursor_key == "e":
-                    build_position.append(cursor.x)
-                    build_position.append(cursor.y)
-                    build_position_count = 0
-                    build_entity = entities[random.randint(1,settlement.population)]
+                    if settlement.wood >= 2:
+                        build_position.append(cursor.x)
+                        build_position.append(cursor.y)
+                        build_position_count = 0
+                        build_entity = entities[random.randint(1,settlement.population)]
                 elif cursor_key == "q":
                     curses.endwin()
                     sys.exit()
