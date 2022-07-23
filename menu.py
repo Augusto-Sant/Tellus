@@ -42,7 +42,7 @@ def main_menu(src):
                 #PLAY
                 if world_made == True:
                     src.clear()
-                    src.addstr((max_y//2)-20,(max_x//2)-15,
+                    src.addstr((max_y//2)-14,(max_x//2)-17,
                     f"Creating starting region: {region_start} in {player_world.name}",BLACK_BLUE)
                     src.addstr((max_y//2)-7,(max_x//2)-15,"Settlement Name (CTRL+G) to save:",BLUE_BLACK)
                     src.refresh()

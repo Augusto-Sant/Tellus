@@ -57,9 +57,9 @@ def curses_colors():
     GREEN_BLACK = curses.color_pair(5)
     return BLACK_WHITE,RED_BLACK,BLACK_RED,BLUE_BLACK,BLACK_BLUE,GREEN_BLACK
 
-def game_input(main_window,bg_color,max_y,max_x,height=15,width=60,):
+def game_input(main_window,bg_color,max_y,max_x,height=15,width=60,in_minus_y=-5,in_minus_x=-15):
     """A small procedure to create input box for commands."""
-    input_window = main_window.subwin(height,width,(max_y//2)-5,(max_x//2)-15)
+    input_window = main_window.subwin(height,width,(max_y//2)+in_minus_y,(max_x//2)+in_minus_x)
     input_window.bkgd(bg_color)
     curses.curs_set(1)
     input_box = textpad.Textbox(input_window)
