@@ -1,3 +1,4 @@
+"""Text tools made for game using curses."""
 import curses
 from curses import textpad
 

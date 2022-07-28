@@ -1,3 +1,4 @@
+"""Generation of a world and usage inside game of said world."""
 import curses
 import random
 import text_tools

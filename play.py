@@ -1,10 +1,15 @@
+#external modules--
 import curses
 from math import sqrt
 import random
 import sys
-
+from time import sleep
+#game modules--
 import text_tools
 import world
+import pathfind
+
+
 
 class Entity():
     """Entity for play"""
@@ -15,80 +20,18 @@ class Entity():
         self.y = y
         #
         self.waiting = False
+        self.path = []
     
-    def move(self,x_input,y_input,terrain,obstacles):
-        """Move entity towards target"""
-        #trying to use pathfinding A* issue: will get stuck in corners or if cursor close..
-        nodes = []
-        current = (self.y,self.x)
-        if current != (y_input,x_input):
-            #verify if not obstacle
-            #up
-            if self.y-1 >= 0:
-                if terrain[self.y-1,self.x] not in obstacles:
-                    nodes.append((self.y-1,self.x))
-            #down
-            if self.y+1 <= 38-1:
-                if terrain[self.y+1,self.x] not in obstacles:
-                    nodes.append((self.y+1,self.x))
-            #left
-            if self.x-1 >= 0:
-                if terrain[self.y,self.x-1] not in obstacles:
-                    nodes.append((self.y,self.x-1))
-            #right
-            if self.x+1 <= 154-1:
-                if terrain[self.y,self.x+1] not in obstacles:
-                    nodes.append((self.y,self.x+1))
-            #up-right
-            if self.x+1 <= 154-1 and self.y+1 <= 38-1:
-                if terrain[self.y+1,self.x+1] not in obstacles:
-                    nodes.append((self.y+1,self.x+1))
-            #down-left
-            if self.x-1 >= 0 and self.y-1 >= 0:
-                if terrain[self.y-1,self.x-1] not in obstacles:
-                    nodes.append((self.y-1,self.x-1))
-            #up_left
-            if self.x-1 >= 0 and self.y+1 <= 38-1:
-                if terrain[self.y+1,self.x-1] not in obstacles:
-                    nodes.append((self.y+1,self.x-1))
-            #down-right
-            if self.x+1 <= 154-1 and self.y-1 >= 0:
-                if terrain[self.y-1,self.x+1] not in obstacles:
-                    nodes.append((self.y-1,self.x+1))
+    def entity_pathfind(self,x_cursor,y_cursor,matrix):
+        """Find path to destination for this Entity."""
+        self.path = pathfind.pathfind(start_input=(int(self.y),int(self.x)),end_input=(y_cursor,x_cursor),matrix_input=matrix)
 
-            smaller_f = 9999
-            for node in nodes:
-                #0=y 1=x
-                #distance from node to current
-                g = sqrt((current[1]-node[1])**2+(current[0]-node[0])**2)
-                #distance from node to end
-                h = sqrt((x_input-node[1])**2+(y_input-node[0])**2)
-                #total cost
-                f = g+h
-                if f < smaller_f:
-                    smaller_f = f
-                    smaller = node
-            
-            if smaller == (self.y-1,self.x):
-                self.y -= 1
-            elif smaller == (self.y+1,self.x):
-                self.y += 1
-            elif smaller == (self.y,self.x-1):
-                self.x -= 1
-            elif smaller == (self.y,self.x+1):
-                self.x += 1
-            elif smaller == (self.y+1,self.x+1):
-                self.x += 1
-                self.y += 1
-            elif smaller == (self.y-1,self.x-1):
-                self.x -= 1
-                self.y -= 1
-            elif smaller == (self.y+1,self.x-1):
-                self.x -= 1
-                self.y += 1
-            elif smaller == (self.y-1,self.x+1):
-                self.x += 1
-                self.y -= 1
+    def move(self):
+        """Move entity towards target"""
+        if len(self.path) > 0:
+            self.x = self.path[0][0]
+            self.y = self.path[0][1]
+            self.path.remove(self.path[0])
     
     def idle(self,terrain,obstacles):
         """Idle random walk for entity"""
@@ -132,11 +75,12 @@ class Entity():
                 self.y -= 1
 
 class Surface():
+    """Surface class that holds updated terrain."""
     def __init__(self):
         #terrain is dict
         self.terrain = {}
 
-    def print_terrain(self,main_window,entities):
+    def print_terrain(self,main_window,entities,matrix_terrain):
         """Terrain for play"""
         colors = text_tools.curses_colors()
         curses.init_pair(7,curses.COLOR_CYAN,curses.COLOR_BLACK)
@@ -152,49 +96,54 @@ class Surface():
                             #aethetic detail of cursor, invisibility
                             if entity.name == "cursor" and entity.symbol == " ":
                                 main_window.addstr(y_axis,x_axis,self.terrain[(row,column)],colors[5])
+                                matrix_terrain[row][column] = 1
                             else:
                                 main_window.addstr(y_axis,x_axis,entity.symbol,colors[3])
+                                matrix_terrain[row][column] = 1
                                 main_window.refresh()
                             break
                         else:
                             #ground
                             if self.terrain[(row,column)] == "O":
                                 main_window.addstr(y_axis,x_axis,self.terrain[(row,column)],colors[1])
+                                matrix_terrain[row][column] = 0
                             elif self.terrain[(row,column)] == "¨":
                                 main_window.addstr(y_axis,x_axis,self.terrain[(row,column)],colors[5])
+                                matrix_terrain[row][column] = 1
                             else:
                                 main_window.addstr(y_axis,x_axis,self.terrain[(row,column)],colors[1])
+                                matrix_terrain[row][column] = 0
                 else:
                     #ground
                     main_window.addstr(y_axis,x_axis,self.terrain[(row,column)],GREY)
+                    matrix_terrain[row][column] = 1
                 x_axis += 1
                 main_window.refresh()
             y_axis += 1
             x_axis = 1
         main_window.refresh()
+        return matrix_terrain
         
 
     def make_terrain(self):
-        """generates random terrain"""
+        """generates random terrain and matrix of this terrain."""
+        #matrix for pathfind updated 1=path 0=obstacle
+        matrix_terrain = []
+        #
         #setup of coordinates and start positions
         for row in range(38):
+            matrix_terrain.append([])
             for column in range(154):
-                if random.randint(0,100) == 100:
+                if random.randint(0,380) == 380:
                     self.terrain.update({(row,column):"O"})
                 else:
                     #ground
                     self.terrain.update({(row,column):"¨"})
-        
-        #this is for mountains
-        # for row in range(38):
-        #     for column in range(154):
-        #         if row > 1 and column > 1 and row < 38-1 and column < 154-1:
-        #             if ((self.terrain[(row-1,column)] == "O") or (self.terrain[(row,column-1)] == "O")
-        #             or (self.terrain[(row+1,column)] == "O") or (self.terrain[(row,column+1)] == "O")):
-        #                 if random.randint(0,50) > 48:
-        #                     self.terrain.update({(row,column):"O"})
+                matrix_terrain[row].append(1)
+        return matrix_terrain
 
 class Settlement():
+    """Class for settlement stats."""
     def __init__(self,name,start_region,chosen_race,population):
         self.name = name
         self.start_region = start_region
@@ -220,11 +169,11 @@ def run(main_window,player_world,region_start,settlement_name,chosen_race):
     BLACK_WHITE,RED_BLACK,BLACK_RED,BLUE_BLACK,BLACK_BLUE,GREEN_BLACK = text_tools.curses_colors()
     max_y,max_x = main_window.getmaxyx()
     curses.curs_set(0)
-    settlement = Settlement(settlement_name,region_start,chosen_race,population=3)
+    settlement = Settlement(settlement_name,region_start,chosen_race,population=5)
     entities,cursor = settlement.create_population()
     #initialize surface
     surface = Surface()
-    surface.make_terrain()
+    matrix_terrain = surface.make_terrain()
     main_window.nodelay(True)
     #commands
     call_position = []
@@ -247,7 +196,7 @@ def run(main_window,player_world,region_start,settlement_name,chosen_race):
         #
         cursor.symbol = " "
         curses.napms(180)
-        surface.print_terrain(main_window,entities)
+        matrix_terrain = surface.print_terrain(main_window,entities,matrix_terrain)
         #activate cursor
         key = main_window.getch()
         if key == ord("p"):
@@ -279,30 +228,37 @@ def run(main_window,player_world,region_start,settlement_name,chosen_race):
                     if cursor.x < 0:
                         cursor.x += 1
                 elif cursor_key == "c":
+                    #CALL--
                     call_position.clear()
                     call_position.append(cursor.x)
                     call_position.append(cursor.y)
+                    for entity in entities:
+                        if entity.name != "cursor":
+                            entity.entity_pathfind(cursor.x,cursor.y,matrix_terrain)
                     #count if majority of entities arrived
                     in_position_count = 0
                 elif cursor_key == "b":
+                    #CUT TREE
                     cut_tree_position.append(cursor.x)
                     cut_tree_position.append(cursor.y)
                     cut_tree_position_count = 0
                     cut_tree_entity = entities[random.randint(1,settlement.population)]
                 elif cursor_key == "e":
+                    #BUILD IN POSITION
                     if settlement.wood >= 2:
                         build_position.append(cursor.x)
                         build_position.append(cursor.y)
                         build_position_count = 0
                         build_entity = entities[random.randint(1,settlement.population)]
                 elif cursor_key == "q":
+                    #QUIT--
                     curses.endwin()
                     sys.exit()
-                surface.print_terrain(main_window,entities)
+                matrix_terrain = surface.print_terrain(main_window,entities,matrix_terrain)
                 main_window.refresh()
             main_window.clear()
             #reprint after pause
-            surface.print_terrain(main_window,entities)
+            matrix_terrain = surface.print_terrain(main_window,entities,matrix_terrain)
             main_window.border()
             main_window.addstr(max_y-1,1,"(q) to quit",RED_BLACK)
             main_window.addstr(0,27,"(p) to pause",BLUE_BLACK)
@@ -312,6 +268,7 @@ def run(main_window,player_world,region_start,settlement_name,chosen_race):
             #
             main_window.nodelay(True)
         elif key == ord("q"):
+            #QUIT OUTSIDE PAUSE
             main_window.nodelay(False)
             curses.endwin()
             main_window.clear()
@@ -335,8 +292,12 @@ def run(main_window,player_world,region_start,settlement_name,chosen_race):
                     if surface.terrain[(cut_tree_position[1]+1,cut_tree_position[0])] not in obstacles:
                         cut_y = 1
 
-                cut_tree_entity.move(cut_tree_position[0]+(cut_x),cut_tree_position[1]+(cut_y),surface.terrain,obstacles)
+                if len(cut_tree_entity.path) == 0:
+                    cut_tree_entity.entity_pathfind(cut_tree_position[0]+(cut_x),cut_tree_position[1]+(cut_y),
+                    matrix_terrain)
                 
+                cut_tree_entity.move()
+
                 if (cut_tree_entity.x == cut_tree_position[0]+(cut_x) 
                 and cut_tree_entity.y == cut_tree_position[1]+(cut_y)):
                     cut_tree_position_count += 1
@@ -368,7 +329,11 @@ def run(main_window,player_world,region_start,settlement_name,chosen_race):
                     if surface.terrain[(build_position[1]+1,build_position[0])] not in obstacles:
                         build_y = 1
 
-                build_entity.move(build_position[0]+(build_x),build_position[1]+(build_y),surface.terrain,obstacles)
+                if len(build_entity.path) == 0:
+                    build_entity.entity_pathfind(build_position[0]+(build_x),build_position[1]+(build_y),
+                    matrix_terrain)
+                
+                build_entity.move()
                 
                 if (build_entity.x == build_position[0]+(build_x) 
                 and build_entity.y == build_position[1]+(build_y)):
@@ -383,12 +348,12 @@ def run(main_window,player_world,region_start,settlement_name,chosen_race):
             else:
                 build_position.clear()
                 build_entity = ""
-        
+
         for entity in entities:
             if (len(call_position) > 0 and entity.name != "cursor" 
             and entity != cut_tree_entity and entity != build_entity):
                 #MOVE TO CALL issue: not checking all correctly
-                entity.move(call_position[0],call_position[1],surface.terrain,obstacles)
+                entity.move()
                 if (entity.x == call_position[0] and entity.y == call_position[1] and entity.waiting == False):
                     in_position_count += 1
                     entity.waiting = True
