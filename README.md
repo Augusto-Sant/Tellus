@@ -4,6 +4,10 @@
     This a RTS/RPG game played on the Terminal made using python and curses, this game is inspired by games like Dwarf Fortress and Rimworld, where each character in map has different moods, you must build a settlement and survive as long as possible with your population.
 </p>
 
+<p align="center">
+<iframe width="560" height="315" src="https://www.youtube.com/embed/mHXuTCLP6Ww" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</p>
+
 <h1 align="center">Features</h1>
 
 - [x] Procedural World Generation.
