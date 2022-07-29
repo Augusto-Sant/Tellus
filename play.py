@@ -1,9 +1,7 @@
 #external modules--
 import curses
-from math import sqrt
 import random
 import sys
-from time import sleep
 #game modules--
 import text_tools
 import world
