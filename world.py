@@ -48,7 +48,7 @@ class World():#NEED BETTER WORLD GENERATION
                     found_race = True
                     self.used_races.append(new_race)
                     self.in_world_races.append(Population(random.randint(1,1000),new_race))
-        #CAN UPDATE RACE TRAITS HERE OR MAYBE IN CLASS POPULATION?
+        #CAN UPDATE RACE TRAITS HERE OR MAYBE IN CLASS POPULATION
 
     def print_world(self,number_rows,number_columns,main_window,max_y,max_x,colors):
         """Puts World Map on Screen"""
@@ -78,8 +78,8 @@ class Population():#SETUP FOR DIFFERENT POPULATIONS
     
     def __str__(self):
         return self.race
-#FUNCTIONS--
 
+#FUNCTIONS--
 def world(main_window,max_y,max_x):
     """Procedure that executes world creation and input."""
     accept = ""

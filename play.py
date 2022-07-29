@@ -13,8 +13,21 @@ import pathfind
 
 class Entity():
     """Entity for play"""
-    def __init__(self,name,symbol,x,y):
+    def __init__(self,name,symbol,x,y,race=""):
         self.name = name
+        self.race = race
+        #personality/mood
+        self.mood = "ok"
+        ok_mood_desc = ["I'm feeling okay right now.","I'm bored.","I enjoy life as it is."]
+        angry_mood_desc = ["I hate this place.","I'm felling angry.","Anger is all that i feel."]
+        happy_mood_desc = ["I really enjoy living here.","I'm happy.","This place is heaven."]
+        if self.mood == "ok":
+            self.desc = random.choice(ok_mood_desc)
+        elif self.mood == "happy":
+            self.desc = random.choice(happy_mood_desc)
+        elif self.mood == "angry":
+            self.desc = random.choice(angry_mood_desc)
+        #terrain attributes
         self.symbol = symbol
         self.x = x
         self.y = y
@@ -24,6 +37,7 @@ class Entity():
     
     def entity_pathfind(self,x_cursor,y_cursor,matrix):
         """Find path to destination for this Entity."""
+        self.path.clear()
         self.path = pathfind.pathfind(start_input=(int(self.y),int(self.x)),end_input=(y_cursor,x_cursor),matrix_input=matrix)
 
     def move(self):
@@ -134,7 +148,7 @@ class Surface():
         for row in range(38):
             matrix_terrain.append([])
             for column in range(154):
-                if random.randint(0,380) == 380:
+                if random.randint(0,380) > 375:
                     self.terrain.update({(row,column):"O"})
                 else:
                     #ground
@@ -149,6 +163,7 @@ class Settlement():
         self.start_region = start_region
         self.population = population
         #pops
+        self.race_name = chosen_race
         self.race_symbol = chosen_race[0]
         #resources--
         self.food = 0
@@ -161,9 +176,31 @@ class Settlement():
         cursor = Entity("cursor","X",0,0)
         entities.append(cursor)
         for i in range(self.population):
-            entities.append(Entity(str(i),self.race_symbol,1,1))
+            entities.append(Entity(self.random_name(),self.race_symbol,1,1,self.race_name))
         return entities,cursor
 
+    def random_name(self):
+        """Returns random name based on race."""
+        #no last names yet
+        human_names = ["John","Richard","Joseph","Olaf","Oskar","Carlos","William"]
+        orc_names = ["Grok","Vrak","Lork","Murka","Vrim","Louk","Brek","Gromm","Khol"]
+        elven_names = ["Isdreal","Virien","Luthi","Samarin","Kalini","Elorin","Surone"]
+        dwarven_names = ["Danef","Orkafr","Munerr","Ulgath","Ungol","Olafr","Grunma","Borinn"]
+        generic_name = ["Koul","Lous","Soua","Muis","Uioe","Juen","Yeth"]
+        if self.race_name == "human":
+            name = random.choice(human_names)
+        elif self.race_name == "orc":
+            name = random.choice(orc_names)
+        elif self.race_name == "elf":
+            name = random.choice(elven_names)
+        elif self.race_name == "dwarf":
+            name = random.choice(dwarven_names)
+        else:
+            name = random.choice(generic_name)
+        
+        return name
+
+#Run play---
 def run(main_window,player_world,region_start,settlement_name,chosen_race):
     """Plays the main game inside a previously created world."""
     BLACK_WHITE,RED_BLACK,BLACK_RED,BLUE_BLACK,BLACK_BLUE,GREEN_BLACK = text_tools.curses_colors()
@@ -205,8 +242,9 @@ def run(main_window,player_world,region_start,settlement_name,chosen_race):
             cursor_key = ""
             while cursor_key != "p":
                 main_window.addstr(0,27,"    PAUSED    ",BLACK_BLUE)
+                #commands
                 commands_show = curses.newwin(5,45,0,(max_x//2)+20)
-                commands_show.addstr(2,2,"(c) to call   (b) to cut tree",GREEN_BLACK)
+                commands_show.addstr(2,2,"(c) to call/choose   (b) to cut tree",GREEN_BLACK)
                 commands_show.addstr(3,2,"(e) to build",GREEN_BLACK)
                 commands_show.border()
                 commands_show.refresh()
@@ -228,20 +266,37 @@ def run(main_window,player_world,region_start,settlement_name,chosen_race):
                     if cursor.x < 0:
                         cursor.x += 1
                 elif cursor_key == "c":
-                    #CALL--
-                    call_position.clear()
-                    call_position.append(cursor.x)
-                    call_position.append(cursor.y)
+                    #CHOOSE, Call or See Entity--
                     for entity in entities:
-                        if entity.name != "cursor":
-                            entity.entity_pathfind(cursor.x,cursor.y,matrix_terrain)
-                    #count if majority of entities arrived
-                    in_position_count = 0
+                        if entity.y == cursor.y and entity.x == cursor.x and entity.name != "cursor":
+                            #Entity info window--
+                            main_window.clear()
+                            main_window.addstr(0,27,"press any key to go back",BLUE_BLACK)
+                            main_window.addstr(2,2,f"{entity.name}",BLUE_BLACK)
+                            main_window.addstr(4,10,f"{entity.race.capitalize()}",GREEN_BLACK)
+                            main_window.addstr(4,20,f"Mood: {entity.mood.capitalize()}",GREEN_BLACK)
+                            main_window.addstr(4,2,f"({entity.x},{entity.y})",GREEN_BLACK)
+                            main_window.addstr(7,10,f"{entity.desc}")
+                            main_window.border()
+                            main_window.refresh()
+                            main_window.getkey()
+                            break
+                    else:
+                        if surface.terrain[(cursor.y,cursor.x)] not in obstacles:
+                            call_position.clear()
+                            call_position.append(cursor.x)
+                            call_position.append(cursor.y)
+                            for entity in entities:
+                                if entity.name != "cursor":
+                                    entity.entity_pathfind(cursor.x,cursor.y,matrix_terrain)
+                            #count if majority of entities arrived
+                            in_position_count = 0
                 elif cursor_key == "b":
                     #CUT TREE
                     cut_tree_position.append(cursor.x)
                     cut_tree_position.append(cursor.y)
                     cut_tree_position_count = 0
+                    #ENTITY INDEX == 0 is cursor.
                     cut_tree_entity = entities[random.randint(1,settlement.population)]
                 elif cursor_key == "e":
                     #BUILD IN POSITION
