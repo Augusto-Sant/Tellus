@@ -1,4 +1,4 @@
-import menu
+import tellus.menu as menu
 
 #main--
 def main():

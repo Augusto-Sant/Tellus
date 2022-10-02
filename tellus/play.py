@@ -3,9 +3,9 @@ import curses
 import random
 import sys
 #game modules--
-import text_tools
-import world
-import pathfind
+import tools.text_tools as text_tools
+import tellus.world as world
+import tools.pathfind as pathfind
 
 
 

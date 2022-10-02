@@ -1,7 +1,7 @@
-import text_tools
+import tools.text_tools as text_tools
 import curses
-import world
-import play
+import tellus.world as world
+import tellus.play as play
 
 def main_menu(src):
     """Main menu"""

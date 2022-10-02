@@ -1,7 +1,7 @@
 """Generation of a world and usage inside game of said world."""
 import curses
 import random
-import text_tools
+import tools.text_tools as text_tools
 
 
 class World():#NEED BETTER WORLD GENERATION
