@@ -1,3 +1,2 @@
-python>=3
-pathfinding>=1.0.1
-windows-curses>=2.3.0
+pathfinding==1.0.1
+windows-curses==2.3.0
